@@ -1,0 +1,26 @@
+{
+    "name": "brandtest/resttest",
+    "type": "library",
+    "description": "Simple REST client",
+    "keywords": ["rest","client"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Łukasz Matuszek",
+            "email": "luk@amberdragon.net",
+            "role": "Developer"
+        }
+    ],
+
+
+    "require": {
+        "php": "^8.0 || ^8.1 ",
+        "nyholm/psr7": "^1.5",
+        "firebase/php-jwt": "^6.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Src\\": "src/"
+        }
+    }
+}
