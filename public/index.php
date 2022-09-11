@@ -14,6 +14,7 @@ $restClient = new  RestClient();
 $restClient->setJwtAuthMethod();
 $result = $restClient->get([ 'drilldowns'=>'Nation' , 'measures'=>'Population'],'data');
 
-print_r($result);
+print_r($result['data']);
+
 exit;
 //=============================================

@@ -23,7 +23,7 @@ class CurlService
         ];
     }
 
-    public function curlRequest(string $method, array $data, string $requestUrl = ''): array|null
+    public function request(string $method, array $data, string $requestUrl = ''): array|null
     {
         $this->requestUrl = $requestUrl;
 
@@ -90,13 +90,12 @@ class CurlService
         $curl = curl_init();
         curl_setopt($curl, CURLOPT_URL, $requestUrl);
 
-        // set auth curl options
+        // auth curl options
         if ($this->authMethod && isset($this->authMethod['name']) && $this->authMethod['name']) {
             $authMethod = "set" . ucfirst($this->authMethod['name']) . "Auth";
             if (! method_exists($this, $authMethod)) {
                 return ['error' => 'Auth error', 'message' => 'Authorization method do not exist'];
             }
-
             $curlAuthOptions = $this->$authMethod($this->authMethod['params']);
             $curlOptions = array_merge($curlOptions, $curlAuthOptions,);
         }
@@ -123,7 +122,11 @@ class CurlService
         curl_close($curl);
 
 
-        switch ($headers['content-type']) {
+        $contentType = explode(";",$headers['content-type']);
+
+
+        switch ( trim($contentType[0]) )  {
+
             case 'application/json' :
                 $data = json_decode($response);
                 break;

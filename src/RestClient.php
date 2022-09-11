@@ -34,28 +34,26 @@ class RestClient implements RestInterface
         $this->baseUrl = $baseUrl;
     }
 
-    public function setBasicAuthMethod($params = [])
+    public function setBasicAuthMethod( string $user='', string $password='')
     {
-        $params = $params ? $params : [
-            'user' =>$this->config->get('resttest.apiUser'),
-            'password' =>$this->config->get('resttest.apiPassword'),
+        $params =  [
+            'user' => $user ? $user : $this->config->get('resttest.apiUser'),
+            'password' => $password ? $password : $this->config->get('resttest.apiPassword'),
         ];
 
         $this->authMethod = [ 'name' => 'basic' , 'params' => $params ];
     }
 
-    public function setJwtAuthMethod( $params = [])
+    public function setJwtAuthMethod(  string $user='', string $password='', string $registerUrl='')
     {
         //get Token
-        $params = $params
-            ? $params
-            : [
-                'user' => $this->config->get('resttest.apiUser'),
-                'password' => $this->config->get('resttest.apiPassword'),
-                'registerUrl' => $this->config->get('resttest.registerUrl')
+        $params = [
+                'user' => $user ? $user : $this->config->get('resttest.apiUser'),
+                'password' => $password ? $password : $this->config->get('resttest.apiPassword'),
+                'registerUrl' => $registerUrl ? $registerUrl : $this->config->get('resttest.registerUrl')
             ];
 
-        $response = $this->curl->curlRequest(
+        $response = $this->curl->request(
             'post',[
                 'user' => $params['user'],
                 'password' => $params['password']
@@ -73,37 +71,52 @@ class RestClient implements RestInterface
 // ----- REST interface
     public function get(array $data, string $apiUrl = ''): array|null
     {
-        $response = $this->curl->setAuthMethod($this->authMethod)->curlRequest("get", $data, $this->baseUrl . "/" . $apiUrl);
+        $this->curl->setAuthMethod($this->authMethod);
+        $response = $this->curl->request("get", $data, $this->baseUrl . "/" . $apiUrl);
 
         return $response;
     }
 
     public function post(array $data, string $apiUrl = ''): array|null
     {
-        $response = $this->curl->setAuthMethod($this->authMethod)->curlRequest("post", $data, $this->baseUrl . "/" . $apiUrl);
+        $this->curl->setAuthMethod($this->authMethod);
+        $response = $this->curl->request("post", $data, $this->baseUrl . "/" . $apiUrl);
 
-        //if( !in_array($response['headers']['status'], [ 200,201,204 ] ));
+        if( ! in_array($response['headers']['status'], [ 200,201,204 ] )){
 
-        return $response;
+            return  [
+                'error' => 1,
+                'message' => "Request returned error status: {$response['headers']['status']}",
+                'data' => $response['data']
+            ];
+        }
+        return [
+            'success' => 1,
+            'message' => "Request successful status: {$response['headers']['status']}",
+            'data' => $response['data']
+        ];
     }
 
     public function put(array $data, string $apiUrl = ''): array|null
     {
-        $response = $this->curl->setAuthMethod($this->authMethod)->curlRequest("put", $data, $this->baseUrl . "/" . $apiUrl);
+        $this->curl->setAuthMethod($this->authMethod);
+        $response = $this->curl->request("put", $data, $this->baseUrl . "/" . $apiUrl);
 
         return $response;
     }
 
     public function patch(array $data, string $apiUrl = ''): array|null
     {
-        $response = $this->curl->setAuthMethod($this->authMethod)->curlRequest("patch", $data, $this->baseUrl . "/" . $apiUrl);
+        $this->curl->setAuthMethod($this->authMethod);
+        $response = $this->curl->request("patch", $data, $this->baseUrl . "/" . $apiUrl);
 
         return $response;
     }
 
     public function delete(array $data, string $apiUrl = ''): array|null
     {
-        $response = $this->curl->setAuthMethod($this->authMethod)->curlRequest("delete", $data, $this->baseUrl . "/" . $apiUrl);
+        $this->curl->setAuthMethod($this->authMethod);
+        $response = $this->curl->request("delete", $data, $this->baseUrl . "/" . $apiUrl);
 
         return $response;
     }
