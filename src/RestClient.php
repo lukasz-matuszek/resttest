@@ -1,186 +1,111 @@
-<?php 
+<?php
 
-class RestClient ()
+namespace Lib;
+
+use Lib\CurlService as Curl;
+
+class RestClient implements RestInterface
 {
+    /** @var string */
+    protected $config;
 
-	protected $apiUrl;
-	protected $authMethod;
-	protected $resultType;
+    /** @var string */
+    protected $baseUrl;
 
-	protected $curl = null;
+    /** @var array */
+    protected $authMethod;
 
-	public functionn __constructor(sring $apiUrl, string $authMethod = 'none',string $resultType = 'json'){
+    /** @var  CurlService */
+    protected $curl;
 
-		$this->apiUrl = $apiUrl; 
-		$this->authMethod = $authMethod; 
-		$this->resultType = $resultType; 
+    public function __construct(string $baseUrl = '')
+    {
+        $this->config = new Config();
 
-	}
+        $defaultBaseUrl = $this->config->get('resttest.baseUrl');
 
+        $baseUrl = $baseUrl ? $baseUrl : $defaultBaseUrl;
+        $this->baseUrl = $baseUrl;
+        $this->curl = new Curl();
+    }
 
-	public function setApiUrl(string $url)
-	{
-		$this->apiUrl = $url;
+    public function setBaseUrl(string $baseUrl)
+    {
+        $this->baseUrl = $baseUrl;
+    }
 
-	}
+    public function setBasicAuthMethod($params = [])
+    {
+        $params = $params ? $params : [
+            'user' =>$this->config->get('resttest.apiUser'),
+            'password' =>$this->config->get('resttest.apiPassword'),
+        ];
 
-	public function setApiAuthMethod($authMethod)
-	{
-		$this->authMethod = $authMethod;
+        $this->authMethod = [ 'name' => 'basic' , 'params' => $params ];
+    }
 
-	}
+    public function setJwtAuthMethod( $params = [])
+    {
+        //get Token
+        $params = $params
+            ? $params
+            : [
+                'user' => $this->config->get('resttest.apiUser'),
+                'password' => $this->config->get('resttest.apiPassword'),
+                'registerUrl' => $this->config->get('resttest.registerUrl')
+            ];
 
-	public function setApiResultType(string $resultType)
-	{
-		$this->resultType = $resultType;
+        $response = $this->curl->curlRequest(
+            'post',[
+                'user' => $params['user'],
+                'password' => $params['password']
+            ],
+            $params['registerUrl']
+        );
 
-	}	
+        if (key_exists('data', $response)) {
+            $token = 'sdkjghkjsghkjshgkds';// $result['data']['token'];
+            if($token) {
+                $this->authMethod = ['name' => 'jwt', 'params' => ['token' => $token]];
+            }
+        }
+    }
+// ----- REST interface
+    public function get(array $data, string $apiUrl = ''): array|null
+    {
+        $response = $this->curl->setAuthMethod($this->authMethod)->curlRequest("get", $data, $this->baseUrl . "/" . $apiUrl);
 
+        return $response;
+    }
 
-	public  function callAPI(string $method, array $data=false):array
-	{
+    public function post(array $data, string $apiUrl = ''): array|null
+    {
+        $response = $this->curl->setAuthMethod($this->authMethod)->curlRequest("post", $data, $this->baseUrl . "/" . $apiUrl);
 
-		$this->curl = curl_init();
+        //if( !in_array($response['headers']['status'], [ 200,201,204 ] ));
 
-		$setCurlOptions = "set" . ucfirst($method);
+        return $response;
+    }
 
-		if(! method_exists($this, $setCurlOptions)) {
-			return false;
-		}
+    public function put(array $data, string $apiUrl = ''): array|null
+    {
+        $response = $this->curl->setAuthMethod($this->authMethod)->curlRequest("put", $data, $this->baseUrl . "/" . $apiUrl);
 
-		$this->$setCurlOptions($data);
-		$this->prepareAuth();
+        return $response;
+    }
 
-		$result = $this->execCurl();
+    public function patch(array $data, string $apiUrl = ''): array|null
+    {
+        $response = $this->curl->setAuthMethod($this->authMethod)->curlRequest("patch", $data, $this->baseUrl . "/" . $apiUrl);
 
-		curl_close($this->curl);
+        return $response;
+    }
 
-		return $this->convertResult($result);
+    public function delete(array $data, string $apiUrl = ''): array|null
+    {
+        $response = $this->curl->setAuthMethod($this->authMethod)->curlRequest("delete", $data, $this->baseUrl . "/" . $apiUrl);
 
-	}
+        return $response;
+    }
 
-	protected convertResult(string $result){
-
-		switch ($this->resultType) {
-			case 'json' : $result = json_decode($result);
-			break;
-
-			case 'xml': $result = simplexml_load_string($result);
-			break;
-
-		}
-
-		return $result;
-
-	}
-
-	protected function execCurl(){
-
-		if(! $this->curl){
-			return false;
-		}
-		
-		curl_setopt($this->curl, CURLOPT_URL, $this->$apiUrl);
-    	curl_setopt($this->curl, CURLOPT_RETURNTRANSFER, 1);
-
-/*
-CURLOPT_HTTPHEADER => array(
-    "cache-control: no-cache",
-    "content-type: application/json",
-    "x-api-key: whateveriyouneedinyourheader"
-  )    	
-*/
-
-    	try{ 
-    		$result = curl_exec($this->curl);
-    	}
-    	catch($e){
-
-    		var_dump(curl_error($this->curl));
-    		
-    		return  "error";
-
-    	}
-
-    	return $result;
-
-	}
-
-	// REST  methods : setting curl options
-
-	protected function setPOST(array $data)
-	{
-		if(! $this->curl){
-			return false;
-		}
-		curl_setopt($this->curl, CURLOPT_POST, 1);
-
-		if ($data){
-			curl_setopt($this->curl, CURLOPT_POSTFIELDS, $data);
-		}
-	}
-
-	protected function setPUT(array $data)
-	{
-		if(! $this->curl){
-			return false;
-		}
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PUT')
-		
-		if ($data){
-			curl_setopt($this->curl, CURLOPT_POSTFIELDS, $data);
-		}
-	}
-
-
-	protected function setDELETE(array $data)
-	{
-		if(! $this->curl){
-			return false;
-		}
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'DELETE')
-
-		if ($data){
-			curl_setopt($this->curl, CURLOPT_POSTFIELDS, $data);
-		}
-
-	}
-
-
-	protected function setPATCH(array $data)
-	{
-		if(! $this->curl){
-			return false;
-		}
-		curl_setopt($curl, CURLOPT_CUSTOMREQUEST, 'PATCH')
-
-		if ($data){
-			curl_setopt($this->curl, CURLOPT_POSTFIELDS, $data);
-		}
-	}
-
-
-	protected function setGET(array $data)
-	{
-		if(! $this->curl){
-			return false;
-		}
-
-	 	if (! $data){ 
-	 		return; 
-	 	}
-		
-		$this->apiUrl = sprintf("%s?%s", $this->apiUrl , http_build_query($data));
-
-	}
-
-	// AUTH methods : setting curl options
-
-	protected function prepareAuth()
-	{
-		if(! $this->curl){
-			return false;
-		}
-
-	}
 }

@@ -1,5 +1,5 @@
 {
-    "name": "brandtest/resttest",
+    "name": "lukasz-matuszek/resttest",
     "type": "library",
     "description": "Simple REST client",
     "keywords": ["rest","client"],
@@ -11,16 +11,15 @@
             "role": "Developer"
         }
     ],
-
-
     "require": {
         "php": "^8.0 || ^8.1 ",
         "nyholm/psr7": "^1.5",
-        "firebase/php-jwt": "^6.3"
+        "firebase/php-jwt": "^6.3",
+        "ext-curl": "*"
     },
     "autoload": {
         "psr-4": {
-            "Src\\": "src/"
+            "Lib\\": "src/"
         }
     }
 }

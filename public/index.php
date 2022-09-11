@@ -1,27 +1,19 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
 
 include __DIR__ . "/../vendor/autoload.php";
 
-$apiUrl = 'XXXX';
-
-$restClient = new RestClient($apiUrl);
+use Lib\RestClient;
 
 //=======================
-echo  "REST TEST";
+echo "REST TEST<br>";
 
+$restClient = new  RestClient();
+$restClient->setJwtAuthMethod();
+$result = $restClient->get([ 'drilldowns'=>'Nation' , 'measures'=>'Population'],'data');
 
-$data = [
-	'name'	=> 'onion',
-	'id' 	=> 12343
-];
-
-$result = $restClient->callAPI('POST',$data);
-
-//=======================
-
-$data = [
-	'variable'	=> 'name',
-	'id' 	=> 12343
-];
-
-$result = $restClient->callAPI('GET',$data);
+print_r($result);
+exit;
+//=============================================
